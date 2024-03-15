@@ -1,4 +1,5 @@
 from ast import main
+from math import log
 import sys
 import logging
 from kaggle import KaggleApi
@@ -13,17 +14,30 @@ logger.info(f"Logger initialized. Set level to: {logs_level}")
 
 def find_dataset(kaggle_api,dataset_name):
     kaggle_dataset = kaggle_api.dataset_list(search=dataset_name)
+    
     if len(kaggle_dataset) > 1:
         logger.info(f"Found {len(kaggle_dataset)} datasets:")
         for dataset in kaggle_dataset:
             logger.info(dataset)
-        logger.error("ERROR: This API can process only one dataset at a time!")  # TODO: return this 
+        logger.error("ERROR: This API can process only one dataset at a time!")  # TODO: return this message
         logger.error("Please input the exact name of the dataset like this: username/dataset-name.")
         return 1
     else:
         logger.info(f"Found dataset {kaggle_dataset}!")
-        return 0
+        return kaggle_dataset
     
+
+def get_dataset_files_list(kaggle_api, dataset_name):
+    dataset_name = dataset_name[0].append('/')
+    print(dataset_name)
+    kaggle_dataset_files_list = kaggle_api.dataset_list_files(dataset_name)
+    logger.info(f"Kaggle dataset status: {kaggle_dataset_status}")
+
+
+def get_dataset_metadata(kaggle_api,dataset_name):
+     kaggle_dataset = kaggle_api.dataset_list(search=dataset_name)
+     pass
+
 
 def load_dataset_to_s3():
     pass
@@ -37,12 +51,16 @@ def lambda_handler(event, context):
     kaggle_api_obj = KaggleApi()
     kaggle_api_obj.authenticate()
 
-    dataset_to_retrieve = event['dataset_name']
-    return find_dataset(kaggle_api_obj, dataset_to_retrieve)
+    dataset_to_retrieve = event['dataset_search_name']
+    dataset_name = find_dataset(kaggle_api_obj, dataset_to_retrieve)
+    logger.info(f"{type(dataset_name)}")
+    logger.info(f"{dataset_name}")
+    
+    get_dataset_files_list(kaggle_api_obj, dataset_name)
      
 
 def main():
-    event = {'dataset_name': 'martj42/international-football-results-from-1872-to-2017'}
+    event = {'dataset_search_name': 'martj42/international-football-results-from-1872-to-2017'}
     context = ''
     print(f'Returned: {lambda_handler(event, context)}')
     
@@ -51,7 +69,7 @@ if __name__ == '__main__':
     main()
 
 # algorithm:
-# 1. check if dataset exists
+# 1. check if only one dataset exists by given name
 # 2. get dataset metadata
 # 3. check if dataset is structured (API will only handle structured datasets)
 # 4. check if dataset is less than 80MB (for now)
