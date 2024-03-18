@@ -1,18 +1,23 @@
 # test stub
-from src.lambdas.save_kaggle_dataset_lambda import lambda_handler
+from src.lambdas.save_kaggle_dataset_lambda import lambda_handler, get_files_to_download_list
 
 
-def lambda_handler_test():
-    event = {'dataset_name': 'martj42/international-football-results-from-1872-to-2017'}
-    context = ''
+def test_get_files_to_download_list():
+    event = {"dataset_search_name": "martj42/international-football-results-from-1872-to-2017",
+            "files_to_download": ["results.csv", "shootouts.csv"]}
+    context = {}
+    class DatasetFileMock:
+        def __init__(self, name):
+            self.name = name
+    dataset_files = [DatasetFileMock("results.csv"), DatasetFileMock("shootouts.csv")]
+
+    get_files_to_download_list(event, dataset_files)
     
-    assert lambda_handler(event, context) == 0
-
 
 def inc(x):
     return x + 1
 
 
-def answer_test():
+def test_answer():
     assert inc(4) == 5
     
