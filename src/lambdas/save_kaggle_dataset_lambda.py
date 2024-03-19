@@ -1,7 +1,6 @@
-from ast import main
-from math import log
 import sys
 import logging
+from pathlib import Path
 from kaggle import KaggleApi
 
 
@@ -56,16 +55,29 @@ def get_files_to_download_list(event, dataset_files):
         return dataset_files
     
     files_to_download = event["files_to_download"]
-    dataset_file_names_list = [x.name for x in dataset_files]
+    dataset_all_file_names = {file.name:file for file in dataset_files}
         
-    # 1. search normally
-    if set(files_to_download).issubset(dataset_file_names_list):
-        logging.info("Found all requested files withing the dataset.")
+    # iterate through each file when searching
+    # if some files are not found - we need to record that and return 
+    # that list to the user
+    # todo: handle files not found
+    files_not_found = list()
+    files_found = list()
+    for i in files_to_download:
+        if i in dataset_all_file_names.keys():
+            logging.debug(f"File {i} found.")
+            files_found.append(dataset_all_file_names[i])
+            continue
         
-        return [x for x in dataset_files if x.name in files_to_download]
-    # 2. search, but without file extensions 
-    # todo: return requested list, but take names from dataset_files  
-    # each requested file must be found or throw an error 
+        file_name_no_suffix = Path(i).stem
+        dataset_files_no_suffix = {Path(file.name).stem:file for \
+                                   file in dataset_files}
+        if file_name_no_suffix in dataset_files_no_suffix.keys():
+            logging.debug(f"File {i} found.")
+            files_found.append(dataset_files_no_suffix[i])
+            continue
+        files_not_found.append(i)
+    return files_found
 
 
 def check_dataset_eligibility(kaggle_api, event, dataset_list):

@@ -2,5 +2,5 @@
 	"TestFramework": "pytest",
 	"UnitTestRootDirectory": "testing",
 	"UnitTestPattern": "test_*.py",
-	"SearchPaths": [ ".\\src" ]
+	"SearchPaths": [ ".\\" ]
 }
