@@ -90,12 +90,12 @@ def get_files_to_download_list(event, dataset_files):
             files_found.append(dataset_files_no_suffix[i])
             continue
         files_not_found.append(i)
+    
     if files_not_found:
         for i in files_not_found:
             logging.error(f"ERROR: File {i} was not found!")
         raise RequestedFilesNotFoundError(files_not_found,
             "ERROR: Some of the requested files were not found!")
-    
         
     return files_found
 
@@ -112,23 +112,13 @@ def check_only_one_dataset_found(dataset_list):
             "username/dataset-name.")
     return 0 # todo: maybe return something else?
 
-def check_dataset_eligibility(kaggle_api, event, dataset_list):
-    # 1. check if dataset is eligible:    
-    #   a. check if only one dataset exists by given name (done: find_dataset func)
-    #   b. check if dataset is less than 80MB (for now)
-    #   c. get dataset metadata (only file list for now, maybe will add more things in the future)
-    #   d. check if there is more than 1 file (if files to download is not provided - ask for files)
-    #       if dataset has only 1 file - just make a table out of that file, 
-    #   e. check if file types are supported by Athena (.avro, .parquet, .csv, .tsv, .json, .orc)
-    
-    if "requested files added together bigger than size limit":
-        pass
-    
-    if "number of files":
-        pass
-    if "supported file formats":
-        pass
 
+def check_requested_files_within_size_limit(requested_files):
+    pass
+
+
+def check_requested_file_formats_supported(requested_files):
+    pass 
 
 
 def get_authenticated_kaggle_api_obj():
@@ -141,8 +131,12 @@ def lambda_handler(event, context):
     kaggle_api = get_authenticated_kaggle_api_obj()
 
     dataset_list = find_dataset(kaggle_api, event['dataset_search_name'])
-    
-    dataset = check_dataset_eligibility(kaggle_api, event, dataset_list)
+
+    # 1. check if dataset is eligible:    
+    #   a. check if only one dataset exists by given name (done: find_dataset func)
+    #   b. check if dataset is less than 80MB (for now)
+    #   c. get dataset metadata (only file list for now, maybe will add more things in the future)
+    #   d. check if file types are supported by Athena (.avro, .parquet, .csv, .tsv, .json, .orc)
 
     # todo: add try-except here
     check_only_one_dataset_found(dataset_list)
