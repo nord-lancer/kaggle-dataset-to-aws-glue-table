@@ -56,16 +56,7 @@ def get_dataset_files_list(kaggle_api, dataset):
     return kaggle_dataset_files_list.files
 
 
-def get_dataset_metadata(kaggle_api,dataset_name):
-     kaggle_dataset = kaggle_api.dataset_list(search=dataset_name)
-     pass
-
-
 def load_dataset_to_s3():
-    pass
-
-
-def load_dataset_metadata_to_s3():
     pass
 
 
@@ -155,12 +146,7 @@ def lambda_handler(event, context):
 
     dataset_list = find_dataset(kaggle_api, event['dataset_search_name'])
 
-    # 1. check if dataset is eligible:    
-    #   a. check if only one dataset exists by given name (done: find_dataset func)
-    #   b. check if dataset is less than 80MB (for now)
-    #   c. get dataset metadata (only file list for now, maybe will add more things in the future)
-    #   d. check if file types are supported by Athena (.avro, .parquet, .csv, .tsv, .json, .orc)
-
+    
     # todo: add try-except here
     check_only_one_dataset_found(dataset_list)
     kaggle_dataset = dataset_list[0]
@@ -183,7 +169,11 @@ if __name__ == '__main__':
     main()
 
 # algorithm:
-# 1. check if dataset is eligible  
+# 1. check if dataset is eligible (done):    
+#   a. check if only one dataset exists by given name (done: find_dataset func)
+#   b. check if dataset is less than 80MB (for now, done)
+#   c. get dataset metadata (only file list for now, maybe will add more things in the future)
+#   d. check if file types are supported by Athena (.avro, .parquet, .csv, .tsv, .json, .orc)
 # 2. check if event has S3 location for data
 # 3. if event doesn't have S3 location, check if env variable has S3 data location set
 # 4. place dataset data and on S3 (location either from env var or event, 
