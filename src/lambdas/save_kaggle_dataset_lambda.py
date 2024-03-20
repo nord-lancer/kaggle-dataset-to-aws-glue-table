@@ -15,6 +15,19 @@ logger.setLevel(logs_level)
 logger.info(f"Logger initialized. Set level to: {logs_level}")
 
 
+class MoreThanOneDatasetFoundError(Exception):
+    pass
+
+
+class RequestedFilesNotFoundError(Exception):
+    def __init(self, files_not_found, *args, **kwargs):
+        self.files_not_found = files_not_found
+
+
+class RequestedFilesTooBig(Exception):
+    pass
+
+
 def find_dataset(kaggle_api,dataset_name):
     kaggle_dataset = kaggle_api.dataset_list(search=dataset_name)
     logger.info(f"Found dataset(s): .")
@@ -77,8 +90,27 @@ def get_files_to_download_list(event, dataset_files):
             files_found.append(dataset_files_no_suffix[i])
             continue
         files_not_found.append(i)
+    if files_not_found:
+        for i in files_not_found:
+            logging.error(f"ERROR: File {i} was not found!")
+        raise RequestedFilesNotFoundError(files_not_found,
+            "ERROR: Some of the requested files were not found!")
+    
+        
     return files_found
 
+
+def check_only_one_dataset_found(dataset_list):
+    if len(dataset_list) > 1: # put in a separate function?
+        logger.error(f"ERROR: Found more than one dataset:")
+        for dataset in dataset_list:
+            logger.error(dataset)
+        
+        raise MoreThanOneDatasetFoundError(
+            "ERROR: This API can process only one dataset at a time!"
+            "Please input the exact name of the dataset like this: "
+            "username/dataset-name.")
+    return 0 # todo: maybe return something else?
 
 def check_dataset_eligibility(kaggle_api, event, dataset_list):
     # 1. check if dataset is eligible:    
@@ -88,29 +120,15 @@ def check_dataset_eligibility(kaggle_api, event, dataset_list):
     #   d. check if there is more than 1 file (if files to download is not provided - ask for files)
     #       if dataset has only 1 file - just make a table out of that file, 
     #   e. check if file types are supported by Athena (.avro, .parquet, .csv, .tsv, .json, .orc)
-    if len(dataset_list) > 1:
-        logger.error(f"ERROR: Found more than one dataset:")
-        for dataset in dataset_list:
-            logger.error(dataset)
-        
-        # TODO: return this message from the API
-        logger.error("ERROR: This API can process only one dataset at a time!") 
-        logger.error("Please input the exact name of the dataset like this: "
-                     "username/dataset-name.")
-        return 1
     
-    kaggle_dataset = dataset_list[0]
-    dataset_files_list = get_dataset_files_list(kaggle_api, kaggle_dataset)
-    
-    if kaggle_dataset.totalBytes > MAX_FILE_SIZE_BYTES:  # Wrong: need to check each file instead
-        logger.error("ERROR: Dataset is too big!")
+    if "requested files added together bigger than size limit":
+        pass
     
     if "number of files":
         pass
     if "supported file formats":
         pass
-        
-    return kaggle_dataset
+
 
 
 def get_authenticated_kaggle_api_obj():
@@ -125,6 +143,11 @@ def lambda_handler(event, context):
     dataset_list = find_dataset(kaggle_api, event['dataset_search_name'])
     
     dataset = check_dataset_eligibility(kaggle_api, event, dataset_list)
+
+    # todo: add try-except here
+    check_only_one_dataset_found(dataset_list)
+    kaggle_dataset = dataset_list[0]
+    dataset_files_list = get_dataset_files_list(kaggle_api, kaggle_dataset)
     
     #logger.info(f"Owner name: {dataset.ownerName}")
     #logger.debug(f"Current version: {dataset.currentVersionNumber}")
