@@ -1,3 +1,4 @@
+from re import L
 import sys
 import logging
 from pathlib import Path
@@ -6,6 +7,8 @@ from kaggle import KaggleApi
 
 KAGGLE_DATASET_NAME_SLASH = '/'
 MAX_FILE_SIZE_BYTES = 80_000_000
+SUPPORTED_FILE_FORMATS = set(".avro", ".parquet", ".csv", ".tsv", ".json", 
+                             ".orc")
 
 
 logger = logging.getLogger("Lambda")
@@ -25,6 +28,10 @@ class RequestedFilesNotFoundError(Exception):
 
 
 class RequestedFilesTooBig(Exception):
+    pass
+
+
+class RequestedFileFormatNotSupported(Exception):
     pass
 
 
@@ -125,8 +132,17 @@ def check_requested_files_within_size_limit(requested_files):
 
 
 def check_requested_file_formats_supported(requested_files):
-    pass 
-
+    not_supported_files = []
+    for file in requested_files:
+       if Path(file).suffix not in SUPPORTED_FILE_FORMATS:
+           not_supported_files.append(file)
+    if not_supported_files:
+        raise RequestedFileFormatNotSupported(
+            f"ERROR: Following requested files are not supported!"
+            f"{not_supported_files}"
+            f"\nSupported file formats: {SUPPORTED_FILE_FORMATS}.")
+    return 0  # todo: maybe return something else?
+        
 
 def get_authenticated_kaggle_api_obj():
     kaggle_api_obj = KaggleApi()
