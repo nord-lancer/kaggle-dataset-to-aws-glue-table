@@ -110,11 +110,18 @@ def check_only_one_dataset_found(dataset_list):
             "ERROR: This API can process only one dataset at a time!"
             "Please input the exact name of the dataset like this: "
             "username/dataset-name.")
-    return 0 # todo: maybe return something else?
+    return 0  # todo: maybe return something else?
 
 
 def check_requested_files_within_size_limit(requested_files):
-    pass
+    files_size_total_bytes = 0
+    for file in requested_files:
+        files_size_total_bytes += file.totalBytes
+    if files_size_total_bytes > MAX_FILE_SIZE_BYTES:
+        raise RequestedFilesTooBig(
+            f"ERROR: Requested files are too big! This API can handle at most "
+            f"{MAX_FILE_SIZE_BYTES} bytes.")
+    return 0  # todo: maybe return something else?
 
 
 def check_requested_file_formats_supported(requested_files):
